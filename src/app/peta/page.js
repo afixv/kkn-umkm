@@ -7,14 +7,21 @@ export default function MapPage() {
   const DEFAULT_CENTER = [-7.420824, 109.228876];
   return (
     <section className="py-32 container">
-      <div className="flex justify-center items-center gap-4 max-w-2xl mx-auto">
-        <FilterButton />
-        <div className="flex-1">
-          <Search />
+      <Suspense fallback={<div>Loading...</div>}>
+        <div className="flex justify-center items-center gap-4 max-w-2xl mx-auto">
+          <FilterButton />
+          <div className="flex-1">
+            <Search />
+          </div>
         </div>
-      </div>
+      </Suspense>
       <div className="mt-12 max-w-[1120px] mx-auto">
-        <Map width="800" height="400" center={DEFAULT_CENTER} zoom={12} className="rounded-xl">
+        <Map
+          width="800"
+          height="400"
+          center={DEFAULT_CENTER}
+          zoom={12}
+          className="rounded-xl">
           {({ TileLayer, Marker, Popup }) => (
             <>
               <TileLayer
