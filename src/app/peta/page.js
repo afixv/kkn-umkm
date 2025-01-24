@@ -2,6 +2,7 @@
 
 import { FilterButton, Search } from "../components";
 import Map from "../components/Map";
+import { Suspense } from "react";
 
 export default function MapPage() {
   const DEFAULT_CENTER = [-7.420824, 109.228876];

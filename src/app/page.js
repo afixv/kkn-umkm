@@ -1,4 +1,5 @@
 import { FilterButton, Search, Pagination, ShopCard } from "./components";
+import { Suspense } from "react";
 
 export default function Home() {
   const onPageChange = (page) => {
