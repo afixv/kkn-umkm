@@ -23,7 +23,7 @@ export default function Navbar() {
     },
     {
       name: "Profil Kelurahan",
-      link: "https://kkn-frontend.vercel.app/profil/kelurahan/kedungwuluh",
+      link: "https://purwokertobaratmaju.com/profil/kelurahan/kedungwuluh",
       target: "_blank",
     },
   ];
@@ -92,7 +92,7 @@ export default function Navbar() {
               </Link>
             </li>
           ))}
-          <Link href="/daftar" className="btn btn-primary font-semibold">
+          <Link href="/auth/daftar" className="btn btn-primary font-semibold">
             Tambah UMKM
           </Link>
         </ul>
@@ -117,7 +117,7 @@ export default function Navbar() {
           </li>
         ))}
         <Link
-          href="/daftar"
+          href="/auth/daftar"
           className="btn btn-primary font-semibold"
           onClick={() => setIsOpen(false)}>
           Tambah UMKM

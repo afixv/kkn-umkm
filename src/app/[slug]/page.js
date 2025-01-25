@@ -123,7 +123,7 @@ const Product = () => {
   return (
     <section>
       <h2 className="text-2xl font-bold text-center">Katalog Produk</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-10">
+      <div className="grid grid-cols-2 md:grid-cols-2 gap-4 md:gap-8 mt-10">
         {Array(6)
           .fill(0)
           .map((_, i) => (

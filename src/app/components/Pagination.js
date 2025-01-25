@@ -27,7 +27,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
           <button
             key={pageNum}
             // onClick={() => onPageChange(pageNum)}
-            className={`inline-flex w-9 h-9 justify-center items-center border rounded-lg ${
+            className={` w-9 h-9 justify-center items-center border rounded-lg hidden md:inline-flex ${
               pageNum === currentPage
                 ? "bg-primary-500 text-white"
                 : "border border-gray-200"

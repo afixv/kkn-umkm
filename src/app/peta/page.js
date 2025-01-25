@@ -2,10 +2,20 @@
 
 import { FilterButton, Search } from "../components";
 import Map from "../components/Map";
-import { Suspense } from "react";
+import { Suspense, useState, useEffect } from "react";
 
 export default function MapPage() {
   const DEFAULT_CENTER = [-7.420824, 109.228876];
+
+  const [mobile, setMobile] = useState(false);
+
+  useEffect(() => {
+    setMobile(window.innerWidth < 768);
+    window.addEventListener("resize", () => {
+      setMobile(window.innerWidth < 768);
+    });
+  }, []);
+
   return (
     <section className="py-32 container">
       <Suspense fallback={<div>Loading...</div>}>
@@ -19,7 +29,7 @@ export default function MapPage() {
       <div className="mt-12 max-w-[1120px] mx-auto">
         <Map
           width="800"
-          height="400"
+          height={mobile ? "1000" : "400"}
           center={DEFAULT_CENTER}
           zoom={12}
           className="rounded-xl">
