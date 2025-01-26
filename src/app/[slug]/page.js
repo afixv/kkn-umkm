@@ -95,7 +95,7 @@ const Overview = () => {
         <h1 className="text-3xl font-bold text-gray-900">{"Untitled"}</h1>
 
         <p className="text-gray-600 font-medium">
-          {"Jam Buka: 09:00 - 21:00 WIB (Senin - Jumat)"}
+          <strong>Jam Buka : </strong> 09:00 - 21:00 WIB (Senin - Jumat)
         </p>
         <p className="font-medium text-justify mt-2">
           Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed varius,
@@ -223,7 +223,9 @@ const MapSection = () => {
             </>
           )}
         </Map>
-        <a href="#" className="btn btn-primary md:absolute mt-4 md:mt-0 -bottom-4 -right-4 md:!px-12 z-[9999]">
+        <a
+          href="#"
+          className="btn btn-primary md:absolute mt-4 md:mt-0 -bottom-4 -right-4 md:!px-12 z-[9999]">
           Buka di Google Maps
         </a>
       </div>
