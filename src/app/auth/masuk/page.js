@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Input } from "@heroui/input";
 import { Form } from "@heroui/react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 export default function Masuk() {
   const [formData, setFormData] = useState({
@@ -49,8 +50,7 @@ export default function Masuk() {
       return;
     }
 
-    console.log("Data Masuk:", formData);
-    // Lakukan tindakan masuk seperti autentikasi di sini
+    redirect("/admin");
   };
 
   return (

@@ -5,6 +5,8 @@ import { useState } from "react";
 import Map from "../components/Map";
 import { useMapEvents } from "react-leaflet";
 import { BsPlus, BsTrash } from "react-icons/bs";
+import toast, { Toaster } from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 export default function Admin() {
   const [formData, setFormData] = useState({
@@ -23,6 +25,7 @@ export default function Admin() {
       },
     ],
     gallery: [""],
+    additionalInformation: "",
     locationLatitude: "",
     locationLongitude: "",
     socialLinksGojek: "",
@@ -32,6 +35,7 @@ export default function Admin() {
   });
 
   const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -71,16 +75,151 @@ export default function Admin() {
     return null;
   };
 
-  const handleSubmit = (e) => {
+  const generateSlug = (name) => {
+    return name
+      .toLowerCase()
+      .trim()
+      .replace(/[\s\W-]+/g, "-");
+  };
+
+  const router = useRouter();
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+      toast.error(
+        "Harap periksa semua isian formulir, pastikan anda telah mengisi semua isian yang wajib di isi."
+      );
       return;
     }
 
-    console.log("Form data:", formData); // Debugging
-    // Handle form submission logic here
+    setIsLoading(true);
+    const loadingToast = toast.loading("Mengupload data...");
+    loadingToast;
+
+    try {
+      const uploadImage = async (file) => {
+        const imageFormData = new FormData();
+        imageFormData.append("files", file);
+
+        const uploadResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/upload`,
+          {
+            method: "POST",
+            body: imageFormData,
+          }
+        );
+
+        if (!uploadResponse.ok) {
+          const errorData = await uploadResponse.json();
+          throw new Error(`Image upload failed: ${JSON.stringify(errorData)}`);
+        }
+
+        return await uploadResponse.json();
+      };
+
+      let mainImage = null;
+      if (formData.image instanceof File) {
+        const uploadedImage = await uploadImage(formData.image);
+        mainImage = uploadedImage[0];
+      }
+      const productWithImages = await Promise.all(
+        formData.product.map(async (product) => {
+          let productImageId = null;
+          if (product.image instanceof File) {
+            const uploadedImage = await uploadImage(product.image);
+            productImageId = uploadedImage[0].id;
+          }
+          return {
+            name: product.name,
+            price: product.price,
+            image: productImageId,
+          };
+        })
+      );
+
+      const galleryImageIds = await Promise.all(
+        formData.gallery
+          .filter((image) => image instanceof File)
+          .map(async (image) => {
+            const uploadedImage = await uploadImage(image);
+            return uploadedImage[0].id;
+          })
+      );
+
+      const slug = generateSlug(formData.name);
+
+      const data = {
+        data: {
+          name: formData.name,
+          slug,
+          whatsapp_number: formData.whatsappNumber,
+          category: formData.category,
+          RW: formData.rw,
+          open_hour: formData.openHour,
+          description: formData.description,
+          products: productWithImages,
+          location_latitude: parseFloat(formData.locationLatitude),
+          location_longitude: parseFloat(formData.locationLongitude),
+          social_links_gojek: formData.socialLinksGojek || null,
+          social_links_grab: formData.socialLinksGrab || null,
+          social_links_tokopedia: formData.socialLinksTokopedia || null,
+          social_links_shopee: formData.socialLinksShopee || null,
+          additional_information: formData.additionalInformation || null,
+          image: mainImage?.id || null,
+          gallery: galleryImageIds,
+        },
+      };
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/umkms`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      const responseData = await response.json();
+
+      if (!response.ok) {
+        if (
+          responseData.error &&
+          responseData.error.details &&
+          responseData.error.details.errors
+        ) {
+          const errorMessages = responseData.error.details.errors
+            .map((error) => `${error.path.join(".")}: ${error.message}`)
+            .join("\n");
+          throw new Error(`Validation errors:\n${errorMessages}`);
+        }
+        throw new Error(
+          responseData.error?.message ||
+            responseData.message ||
+            "An unknown error occurred"
+        );
+      }
+      toast.success("Data berhasil disimpan!");
+      router.push(`/admin/berhasil?slug=${slug}`);
+    } catch (error) {
+      if (error.message.includes("slug")) {
+        toast.error("Nama toko sudah digunakan, silakan gunakan nama lain.", {
+          style: {
+            textAlign: "center",
+          },
+        });
+      } else toast.error(`Terjadi kesalahan: ${error.message}`);
+
+      if (error.response) {
+        try {
+          const errorBody = await error.response.json();
+        } catch (e) {}
+      }
+    } finally {
+      setIsLoading(false);
+      toast.dismiss(loadingToast);
+    }
   };
 
   const validateForm = () => {
@@ -115,24 +254,24 @@ export default function Admin() {
     return errors;
   };
   const rwOptions = [
-    { key: "1", label: "RW 01" },
-    { key: "2", label: "RW 02" },
-    { key: "3", label: "RW 03" },
-    { key: "4", label: "RW 04" },
-    { key: "5", label: "RW 05" },
-    { key: "6", label: "RW 06" },
-    { key: "7", label: "RW 07" },
-    { key: "8", label: "RW 08" },
+    { key: "RW 01", label: "RW 01" },
+    { key: "RW 02", label: "RW 02" },
+    { key: "RW 03", label: "RW 03" },
+    { key: "RW 04", label: "RW 04" },
+    { key: "RW 05", label: "RW 05" },
+    { key: "RW 06", label: "RW 06" },
+    { key: "RW 07", label: "RW 07" },
+    { key: "RW 08", label: "RW 08" },
   ];
   const umkmCategories = [
-    { key: "1", label: "Makanan dan Minuman" },
-    { key: "2", label: "Pakaian dan Aksesoris" },
-    { key: "3", label: "Kesehatan dan Kecantikan" },
-    { key: "4", label: "Elektronik" },
-    { key: "5", label: "Perabotan" },
-    { key: "6", label: "Otomotif" },
-    { key: "7", label: "Kerajinan" },
-    { key: "8", label: "Lainnya" },
+    { key: "Makanan dan Minuman", label: "Makanan dan Minuman" },
+    { key: "Pakaian dan Aksesoris", label: "Pakaian dan Aksesoris" },
+    { key: "Kesehatan dan Kecantikan", label: "Kesehatan dan Kecantikan" },
+    { key: "Elektronik", label: "Elektronik" },
+    { key: "Perabotan", label: "Perabotan" },
+    { key: "Otomotif", label: "Otomotif" },
+    { key: "Kerajinan", label: "Kerajinan" },
+    { key: "Lainnya", label: "Lainnya" },
   ];
   const addProduct = () => {
     setFormData((prev) => ({
@@ -167,7 +306,9 @@ export default function Admin() {
   };
   return (
     <main className="container py-28">
+      <Toaster />
       <Form
+        encType="multipart/form-data"
         validationBehavior="native"
         validationErrors={errors}
         onReset={() => setFormData({})}
@@ -186,11 +327,15 @@ export default function Admin() {
               isRequired
               variant="faded"
               label="Foto Toko"
+              accept="image/*"
               placeholder="Masukkan foto identitas toko"
               description="Dapat memasukkan logo, produk unggulan, atau foto toko yang menunjukkan identitas toko anda"
               type="file"
               name="image"
-              onChange={handleInputChange}
+              onChange={(e) => {
+                const file = e.target.files[0];
+                setFormData((prev) => ({ ...prev, image: file }));
+              }}
               labelPlacement="outside"
             />
           </div>
@@ -302,7 +447,6 @@ export default function Admin() {
                   name={`product.${index}.name`}
                   value={product?.name}
                   onChange={(e) => {
-                    console.log(e.target.value);
                     handleInputChange({
                       target: {
                         name: `product.${index}.name`,
@@ -399,8 +543,13 @@ export default function Admin() {
         </section>
 
         <section className="mt-8 w-full md:w-1/2">
-          <h2 className="font-bold text-2xl">Lokasi Toko</h2>
-          <div className="font-medium space-y-6 mt-4">
+          <h2 className="font-bold text-2xl">
+            Lokasi Toko <span className="text-red-500">*</span>
+          </h2>
+          <p className="text-gray-500 font-medium mt-1 text-sm mb-8">
+            Silakan pilih titik lokasi toko anda
+          </p>
+          <div className="font-medium space-y-6 mt-2">
             <Map
               width="800"
               height="400"
@@ -490,8 +639,13 @@ export default function Admin() {
         </section>
 
         <div className="mt-12 flex justify-end">
-          <button type="submit" className="btn btn-primary">
-            Konfirmasi
+          <button
+            type="submit"
+            disabled={isLoading}
+            className={`btn btn-primary ${
+              isLoading ? "opacity-50 cursor-not-allowed" : ""
+            }`}>
+            {isLoading ? "Mengunggah..." : "Kirim"}
           </button>
         </div>
       </Form>

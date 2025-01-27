@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Input } from "@heroui/input";
 import { Form } from "@heroui/react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 export default function Daftar() {
   const [formData, setFormData] = useState({
@@ -63,6 +64,7 @@ export default function Daftar() {
     }
 
     setSubmitted(true);
+    redirect("/auth/daftar/berhasil");
     console.log("Data Pendaftaran:", formData);
   };
 
