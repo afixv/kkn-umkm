@@ -6,7 +6,7 @@ import { Suspense, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import axios from "axios";
 
-export default function MapPage() {
+function MapContent() {
   const DEFAULT_CENTER = [-7.420824, 109.228876];
 
   const searchParams = useSearchParams();
@@ -32,7 +32,7 @@ export default function MapPage() {
         {
           params: {
             sort: "createdAt:desc",
-            "pagination[pageSize]": 100,
+            "pagination[pageSize]": 1000,
             ...(currentKeyword && {
               "filters[name][$containsi]": currentKeyword,
             }),
@@ -74,43 +74,61 @@ export default function MapPage() {
       </Suspense>
       <div className="mt-12 max-w-[1120px] mx-auto">
         {loading ? (
-          <Skeleton
-            className={`w-full rounded-xl ${mobile ? "h-[1000px]" : "h-[550px]"}`}
-          />
+          <>
+            <Skeleton className="max-w-40 rounded-xl h-4" />
+            <Skeleton
+              className={`w-full rounded-xl ${
+                mobile ? "h-[1000px]" : "h-[550px]"
+              }`}
+            />
+          </>
         ) : (
-          <Map
-            width="800"
-            height={mobile ? "1000" : "400"}
-            center={DEFAULT_CENTER}
-            zoom={12}
-            className="rounded-xl">
-            {({ TileLayer, Marker, Popup }) => (
-              <>
-                <TileLayer
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-                />
-                {locations.map((location) => (
-                  <Marker
-                    key={location.id}
-                    position={[
-                      location?.location_latitude,
-                      location?.location_longitude,
-                    ]}>
-                    <Popup>
-                      <span>
-                        <strong>{location?.name}</strong> ({location?.RW})
-                      </span>
-                      <br />
-                      {location?.category}
-                    </Popup>
-                  </Marker>
-                ))}
-              </>
-            )}
-          </Map>
+          <>
+            <p className="text-start text-gray-700 my-2 text-sm font-medium">
+              Menampilkan <strong>{locations.length}</strong> UMKM
+            </p>
+            <Map
+              width="800"
+              height={mobile ? "1000" : "400"}
+              center={DEFAULT_CENTER}
+              zoom={12}
+              className="rounded-xl">
+              {({ TileLayer, Marker, Popup }) => (
+                <>
+                  <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+                  />
+                  {locations.map((location) => (
+                    <Marker
+                      key={location.id}
+                      position={[
+                        location?.location_latitude,
+                        location?.location_longitude,
+                      ]}>
+                      <Popup>
+                        <span>
+                          <strong>{location?.name}</strong> ({location?.RW})
+                        </span>
+                        <br />
+                        {location?.category}
+                      </Popup>
+                    </Marker>
+                  ))}
+                </>
+              )}
+            </Map>
+          </>
         )}
       </div>
     </section>
+  );
+}
+
+export default function MapPage() {
+  return (
+    <Suspense>
+      <MapContent />
+    </Suspense>
   );
 }
