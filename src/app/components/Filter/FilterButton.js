@@ -7,8 +7,6 @@ import { FiFilter } from "react-icons/fi";
 const FilterButton = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [filters, setFilters] = useState({ kategori: "", lokasi: "" });
-  const [categories, setCategories] = useState([]);
-  const [districts, setDistricts] = useState([]);
   const router = useRouter();
   const searchParams = useSearchParams();
   const popupRef = useRef(null);
@@ -39,6 +37,28 @@ const FilterButton = () => {
     router.push(`${window.location.pathname}?${params.toString()}`);
     setShowPopup(false);
   };
+
+  const categories = [
+    { key: "makanan-dan-minuman", label: "Makanan dan Minuman" },
+    { key: "pakaian-dan-aksesoris", label: "Pakaian dan Aksesoris" },
+    { key: "kesehatan-dan-kecantikan", label: "Kesehatan dan Kecantikan" },
+    { key: "elektronik", label: "Elektronik" },
+    { key: "perabotan", label: "Perabotan" },
+    { key: "otomotif", label: "Otomotif" },
+    { key: "kerajinan", label: "Kerajinan" },
+    { key: "lainnya", label: "Lainnya" },
+  ];
+
+  const districts = [
+    { key: "rw-01", label: "RW 01" },
+    { key: "rw-02", label: "RW 02" },
+    { key: "rw-03", label: "RW 03" },
+    { key: "rw-04", label: "RW 04" },
+    { key: "rw-05", label: "RW 05" },
+    { key: "rw-06", label: "RW 06" },
+    { key: "rw-07", label: "RW 07" },
+    { key: "rw-08", label: "RW 08" },
+  ];
 
   const activeFiltersCount = Object.values(filters).filter(Boolean).length;
 
@@ -114,8 +134,8 @@ const FilterButton = () => {
               className="w-full mt-1 p-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-200">
               <option value="">Semua</option>
               {categories.map((category) => (
-                <option key={category.id} value={category.slug}>
-                  {category.title}
+                <option key={category.key} value={category.key}>
+                  {category.label}
                 </option>
               ))}
             </select>
@@ -135,8 +155,8 @@ const FilterButton = () => {
               className="w-full mt-1 p-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-200">
               <option value="">Semua</option>
               {districts.map((district) => (
-                <option key={district.id} value={district.slug}>
-                  {district.title}
+                <option key={district.key} value={district.key}>
+                  {district.label}
                 </option>
               ))}
             </select>
