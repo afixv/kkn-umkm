@@ -11,7 +11,7 @@ export default function Perbarui() {
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter" && slug.trim() !== "") {
-      router.push(`/perbarui/${slug}`);
+      router.push(`/area-umkm/perbarui/${slug}`);
     }
   };
 
@@ -33,7 +33,7 @@ export default function Perbarui() {
           onKeyDown={handleKeyPress}
         />
         <Link
-          href={`/perbarui/${slug}`}
+          href={`/area-umkm/perbarui/${slug}`}
           className="bg-primary h-8 w-8 inline-flex justify-center text-white items-center rounded-full absolute right-2 top-1/2 transform -translate-y-1/2">
           <IoSend />
         </Link>
