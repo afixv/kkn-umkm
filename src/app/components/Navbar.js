@@ -92,7 +92,7 @@ export default function Navbar() {
               </Link>
             </li>
           ))}
-          <Link href="/auth/daftar" className="btn btn-primary font-semibold">
+          <Link href="/area-umkm" className="btn btn-primary font-semibold">
             Tambah UMKM
           </Link>
         </ul>
@@ -117,7 +117,7 @@ export default function Navbar() {
           </li>
         ))}
         <Link
-          href="/auth/daftar"
+          href="/area-umkm"
           className="btn btn-primary font-semibold"
           onClick={() => setIsOpen(false)}>
           Tambah UMKM

@@ -13,11 +13,13 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import Map from "../components/Map";
 import React, { useState, useEffect } from "react";
+import { notFound } from "next/navigation";
 
 export default function ShopDetail({ params }) {
   const { slug } = React.use(params);
   const [data, setData] = useState(null);
   const [product, setProduct] = useState(null);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -27,23 +29,33 @@ export default function ShopDetail({ params }) {
         );
         const { data } = res.data;
 
+        if (data.length === 0) {
+          setError(true);
+          return;
+        }
+
         const filteredData = data[0];
 
         const resProduct = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/umkms?filters[slug][$eq]=${slug}&populate=products.image`
         );
         const { data: productData } = resProduct.data;
-        const filteredProduct = productData[0];
 
+        const filteredProduct = productData[0];
         setProduct(filteredProduct);
         setData(filteredData);
       } catch (error) {
         console.error("Error fetching data:", error);
+        setError(true);
       }
     };
 
     fetchData();
   }, [slug]);
+
+  if (error) {
+    return notFound();
+  }
 
   if (!data) return null;
 
@@ -273,7 +285,7 @@ const MapSection = ({ location_latitude, location_longitude, address }) => {
       <h2 className="text-2xl font-bold text-start">Lokasi</h2>
 
       <p className="mt-4 text-gray-900 font-medium max-w-3xl">
-        <strong>Alamat : </strong> {address}
+        <strong>Alamat : </strong> {address || "Alamat tidak tersedia"}
       </p>
       <div className="max-w-3xl rounded-lg mt-2 relative">
         <Map

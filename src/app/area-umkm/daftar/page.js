@@ -2,13 +2,13 @@
 
 import { Form, Input, Textarea, Select, SelectItem } from "@heroui/react";
 import { useState } from "react";
-import Map from "../components/Map";
+import Map from "@/app/components/Map";
 import { useMapEvents } from "react-leaflet";
 import { BsPlus, BsTrash } from "react-icons/bs";
 import toast, { Toaster } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
-export default function Admin() {
+export default function Daftar() {
   const [formData, setFormData] = useState({
     image: "",
     name: "",
@@ -203,7 +203,9 @@ export default function Admin() {
         );
       }
       toast.success("Data berhasil disimpan!");
-      router.push(`/admin/berhasil?slug=${slug}`);
+      router.push(
+        `/area-umkm/daftar/berhasil?slug=${slug}&code=${responseData?.data?.documentId}`
+      );
     } catch (error) {
       if (error.message.includes("slug")) {
         toast.error("Nama toko sudah digunakan, silakan gunakan nama lain.", {
