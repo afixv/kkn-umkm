@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 
 export default function ShopCard({ item }) {
-  console.log("Data fetched:", item?.image.url);
   return (
     <Link href={`/${item?.slug}`} className="overflow-hidden group ">
       <div className="flex items-center space-x-2 my-2">
@@ -18,8 +17,9 @@ export default function ShopCard({ item }) {
       <div className="relative w-full h-auto overflow-hidden rounded-lg transform border-2 border-primary aspect-[8/7] shadow-light">
         <Image
           src={
-            process.env.NEXT_PUBLIC_IMAGE_URL + item?.image?.url ||
-            "/img/default.svg"
+            item?.image?.url
+              ? process.env.NEXT_PUBLIC_IMAGE_URL + item?.image?.url
+              : "/img/default.svg"
           }
           alt={item?.name}
           layout="fill"

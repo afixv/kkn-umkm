@@ -28,6 +28,7 @@ export default function Admin() {
     additionalInformation: "",
     locationLatitude: "",
     locationLongitude: "",
+    address: "",
     socialLinksGojek: "",
     socialLinksGrab: "",
     socialLinksTokopedia: "",
@@ -163,6 +164,7 @@ export default function Admin() {
           products: productWithImages,
           location_latitude: parseFloat(formData.locationLatitude),
           location_longitude: parseFloat(formData.locationLongitude),
+          address: formData.address,
           social_links_gojek: formData.socialLinksGojek || null,
           social_links_grab: formData.socialLinksGrab || null,
           social_links_tokopedia: formData.socialLinksTokopedia || null,
@@ -210,12 +212,6 @@ export default function Admin() {
           },
         });
       } else toast.error(`Terjadi kesalahan: ${error.message}`);
-
-      if (error.response) {
-        try {
-          const errorBody = await error.response.json();
-        } catch (e) {}
-      }
     } finally {
       setIsLoading(false);
       toast.dismiss(loadingToast);
@@ -230,9 +226,6 @@ export default function Admin() {
     if (!formData.whatsappNumber) {
       errors.whatsappNumber = "Nomor WhatsApp harus diisi";
     }
-    if (!formData.product[0].image) {
-      errors["product.image"] = "Foto produk harus diisi";
-    }
     if (!formData.product[0].name) {
       errors["product.name"] = "Nama produk harus diisi";
     }
@@ -243,16 +236,14 @@ export default function Admin() {
       errors.location = "Lokasi toko harus diisi";
     }
     formData.product.forEach((product, index) => {
-      if (!product.image)
-        errors[`product.${index}.image`] = "Foto produk harus diisi";
       if (!product.name)
         errors[`product.${index}.name`] = "Nama produk harus diisi";
       if (!product.price)
         errors[`product.${index}.price`] = "Harga produk harus diisi";
     });
-
     return errors;
   };
+
   const rwOptions = [
     { key: "RW 01", label: "RW 01" },
     { key: "RW 02", label: "RW 02" },
@@ -324,7 +315,6 @@ export default function Admin() {
 
           <div className="font-medium">
             <Input
-              isRequired
               variant="faded"
               label="Foto Toko"
               accept="image/*"
@@ -421,7 +411,6 @@ export default function Admin() {
           {formData.product.map((product, index) => (
             <div key={index} className="space-y-6 pb-4 py-4">
               <Input
-                isRequired={index === 0}
                 variant="faded"
                 accept="image/*"
                 label={`Foto Produk ${index > 0 ? index + 1 : ""}`}
@@ -546,7 +535,7 @@ export default function Admin() {
           <h2 className="font-bold text-2xl">
             Lokasi Toko <span className="text-red-500">*</span>
           </h2>
-          <p className="text-gray-500 font-medium mt-1 text-sm mb-8">
+          <p className="text-gray-500 font-medium mt-1 text-sm mb-4">
             Silakan pilih titik lokasi toko anda
           </p>
           <div className="font-medium space-y-6 mt-2">
@@ -580,6 +569,17 @@ export default function Admin() {
               )}
             </Map>
           </div>
+          <Textarea
+            isRequired
+            variant="underlined"
+            label="Alamat Toko"
+            placeholder="Masukkan alamat toko"
+            name="address"
+            value={formData.address}
+            onChange={handleInputChange}
+            labelPlacement="outside"
+            className="font-medium block pt-4"
+          />
         </section>
 
         <section className="mt-8 w-full">
