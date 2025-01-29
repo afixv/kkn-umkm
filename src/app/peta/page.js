@@ -66,10 +66,10 @@ function MapContent() {
     <section className="py-32 container">
       <Suspense fallback={<div>Loading...</div>}>
         <div className="flex justify-center items-center gap-4 max-w-2xl mx-auto">
-          <FilterButton />
           <div className="flex-1">
             <Search />
           </div>
+          <FilterButton />
         </div>
       </Suspense>
       <div className="mt-12 max-w-[1120px] mx-auto">
