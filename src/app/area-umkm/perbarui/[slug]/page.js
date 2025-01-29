@@ -199,7 +199,7 @@ export default function Edit({ params }) {
       if (formData.gallery) {
         payload.data.gallery = await Promise.all(
           formData.gallery
-            .filter((image) => image !== null) 
+            .filter((image) => image !== null)
             .map(async (image, index) => {
               return image
                 ? image !== initialImages.gallery[index]
@@ -227,9 +227,8 @@ export default function Edit({ params }) {
         payload
       );
 
-      router.push(`/${formData.slug}`);
-
       toast.success("Data berhasil diunggah!");
+      router.push(`/${formData.slug}`);
     } catch (error) {
       console.error("Error updating UMKM:", error);
       toast.error("Terjadi kesalahan saat mengunggah data");
@@ -244,8 +243,8 @@ export default function Edit({ params }) {
     const loadingToast = toast.loading("Menghapus data...");
     try {
       await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/umkms/${slug}`);
-      router.push("/");
       toast.success("Data berhasil dihapus!");
+      router.push("/");
       onClose();
     } catch (error) {
       console.error("Error deleting UMKM:", error);
