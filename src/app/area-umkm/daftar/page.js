@@ -202,7 +202,9 @@ export default function Daftar() {
             "An unknown error occurred"
         );
       }
-      toast.success("Data berhasil disimpan!");
+      toast.success(
+        "Data berhasil disimpan!"
+      );
       router.push(
         `/area-umkm/daftar/berhasil?slug=${slug}&code=${responseData?.data?.documentId}`
       );

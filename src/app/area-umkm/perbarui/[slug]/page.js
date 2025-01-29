@@ -4,7 +4,20 @@ import axios from "axios";
 import { notFound } from "next/navigation";
 import toast, { Toaster } from "react-hot-toast";
 
-import { Form, Input, Textarea, Select, SelectItem } from "@heroui/react";
+import {
+  Form,
+  Input,
+  Textarea,
+  Select,
+  SelectItem,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
+  Button,
+} from "@heroui/react";
 import Map from "@/app/components/Map";
 import { useMapEvents } from "react-leaflet";
 import { BsPlus, BsTrash } from "react-icons/bs";
@@ -12,11 +25,13 @@ import { useRouter } from "next/navigation";
 import { ImagePreview } from "@/app/components";
 
 export default function Edit({ params }) {
+  const router = useRouter();
   const { slug } = React.use(params);
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [formData, setFormData] = useState({
     name: "",
     category: "",
-    rw: "",
+    RW: "",
     open_hour: "",
     whatsapp_number: "",
     description: "",
@@ -33,8 +48,14 @@ export default function Edit({ params }) {
     image: null,
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [data, setData] = useState({});
   const [error, setError] = useState(null);
   const [initialImages, setInitialImages] = useState({
+    main: null,
+    products: [],
+    gallery: [],
+  });
+  const [initialImagesId, setInitialImagesId] = useState({
     main: null,
     products: [],
     gallery: [],
@@ -60,11 +81,17 @@ export default function Edit({ params }) {
           gallery: umkm.gallery?.map((g) => g.url) || [],
         });
 
+        setInitialImagesId({
+          main: umkm.image?.id || null,
+          products: umkm.products?.map((p) => p.image?.id) || [],
+          gallery: umkm.gallery?.map((g) => g.id) || [],
+        });
+
         setFormData({
-          id: umkm.id,
+          slug: umkm.slug,
           name: umkm.name,
           category: umkm.category,
-          rw: umkm.RW,
+          RW: umkm.RW,
           open_hour: umkm.open_hour,
           whatsapp_number: umkm.whatsapp_number,
           description: umkm.description,
@@ -85,6 +112,7 @@ export default function Edit({ params }) {
           image: null,
         });
       } catch (error) {
+        console.error("Error fetching UMKM:", error);
         setError(true);
       }
     };
@@ -94,11 +122,11 @@ export default function Edit({ params }) {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
-    if (name.startsWith("product")) {
+    if (name.startsWith("product.")) {
       const [_, index, field] = name.split(".");
       setFormData((prev) => {
         const updatedProduct = [...prev.product];
-        updatedProduct[index][field] = value;
+        updatedProduct[parseInt(index)][field] = value;
         return { ...prev, product: updatedProduct };
       });
     } else {
@@ -109,58 +137,124 @@ export default function Edit({ params }) {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const uploadImage = async (file) => {
+    const formData = new FormData();
+    formData.append("files", file);
 
     try {
-      const formDataToSend = new FormData();
-
-      Object.keys(formData).forEach((key) => {
-        if (
-          key !== "product" &&
-          key !== "gallery" &&
-          key !== "image" &&
-          formData[key]
-        ) {
-          formDataToSend.append(key, formData[key]);
-        }
-      });
-
-      if (formData.image) {
-        formDataToSend.append("image", formData.image);
-      }
-
-      formData.product.forEach((product, index) => {
-        formDataToSend.append(`product[${index}][name]`, product.name);
-        formDataToSend.append(`product[${index}][price]`, product.price);
-        if (product.image) {
-          formDataToSend.append(`product[${index}][image]`, product.image);
-        }
-      });
-
-      formData.gallery.forEach((image, index) => {
-        if (image) {
-          formDataToSend.append(`gallery[${index}]`, image);
-        }
-      });
-
-      await axios.put(
-        `${process.env.NEXT_PUBLIC_API_URL}/umkms/${slug}`,
-        formDataToSend,
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/upload`,
+        formData,
         {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
+          headers: { "Content-Type": "multipart/form-data" },
         }
       );
 
-      window.location.href = "/dashboard";
+      return response.data[0];
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      throw error;
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    const loadingToast = toast.loading("Mengupload data...");
+
+    try {
+      const payload = { data: {} };
+
+      if (formData.image && formData.image !== initialImages.main) {
+        const uploadedMainImage = await uploadImage(formData.image);
+        payload.data.image = uploadedMainImage.id;
+      } else {
+        payload.data.image = initialImagesId.main;
+      }
+
+      if (formData.product) {
+        payload.data.products = await Promise.all(
+          formData.product.map(async (product, index) => {
+            const initialProduct = data.products?.[index] || {};
+            const updatedProduct = {
+              name:
+                product.name !== initialProduct.name
+                  ? product.name
+                  : initialProduct.name,
+              price:
+                product.price !== initialProduct.price
+                  ? product.price
+                  : initialProduct.price,
+              image: product.image
+                ? product.image !== initialImages.products[index]
+                  ? (await uploadImage(product.image)).id
+                  : initialImagesId.products[index]
+                : initialImagesId.products[index],
+            };
+            return updatedProduct;
+          })
+        );
+      }
+
+      if (formData.gallery) {
+        payload.data.gallery = await Promise.all(
+          formData.gallery.map(async (image, index) => {
+            return image
+              ? image !== initialImages.gallery[index]
+                ? (await uploadImage(image)).id
+                : initialImagesId.gallery[index]
+              : initialImagesId.gallery[index];
+          })
+        );
+      }
+
+      Object.keys(formData).forEach((key) => {
+        if (
+          !["product", "gallery", "image"].includes(key) &&
+          formData[key] !== null &&
+          formData[key] !== data[key]
+        ) {
+          payload.data[key] = formData[key];
+        }
+      });
+
+      console.log("Payload to send:", payload);
+
+      await axios.put(
+        `${process.env.NEXT_PUBLIC_API_URL}/umkms/${slug}`,
+        payload
+      );
+
+      router.push(`/umkms/${formData.slug}`);
+
+      toast.success(
+        "Data berhasil diunggah!"
+      );
     } catch (error) {
       console.error("Error updating UMKM:", error);
-      setError(true);
+      toast.error("Terjadi kesalahan saat mengunggah data");
     } finally {
       setIsLoading(false);
+      toast.dismiss(loadingToast);
+    }
+  };
+
+  const handleDelete = async (onClose) => {
+    setIsLoading(true);
+    const loadingToast = toast.loading("Menghapus data...");
+    try {
+      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/umkms/${slug}`);
+      router.push("/");
+      toast.success(
+        "Data berhasil dihapus!"
+      );
+      onClose();
+    } catch (error) {
+      console.error("Error deleting UMKM:", error);
+      toast.error("Terjadi kesalahan saat menghapus data");
+    } finally {
+      setIsLoading(false);
+      toast.dismiss(loadingToast);
     }
   };
 
@@ -213,7 +307,7 @@ export default function Edit({ params }) {
     return notFound();
   }
 
-  if (!formData) return null;
+  if (!formData.RW) return null;
 
   const rwOptions = [
     { key: "RW 01", label: "RW 01" },
@@ -249,10 +343,17 @@ export default function Edit({ params }) {
             <h1 className="font-bold text-3xl">
               Selangkah Lagi Untuk Toko Anda Siap!
             </h1>
-            <p className="text-gray-500 font-medium mb-12">
+            <p className="text-gray-500 font-medium ">
               Silahkan lengkapi data berikut untuk menyelesaikan proses
               pembuatan toko Anda.
             </p>
+            {formData.slug && (
+              <div className="rounded-full w-fit py-2 px-6 border-2 border-black bg-white font-bold overflow-clip relative underline mb-12 mt-4">
+                <span className="text-sm md:text-base leading-snug break-words break-all">
+                  {`https://umkm-kedungwuluh.purwokertobaratmaju.com/${formData.slug}`}
+                </span>
+              </div>
+            )}
 
             <div className="font-medium">
               <div className="font-medium">
@@ -299,14 +400,14 @@ export default function Edit({ params }) {
                 variant="underlined"
                 label="RW"
                 placeholder="Pilih RW"
-                name="rw"
-                selectedKeys={[formData.rw]}
+                name="RW"
+                selectedKeys={[formData.RW]}
                 onChange={(e) => {
                   handleInputChange(e);
                 }}
                 labelPlacement="outside">
-                {rwOptions.map((rw) => (
-                  <SelectItem key={rw.key}>{rw.label}</SelectItem>
+                {rwOptions.map((RW) => (
+                  <SelectItem key={RW.key}>{RW.label}</SelectItem>
                 ))}
               </Select>
               <Input
@@ -581,6 +682,54 @@ export default function Edit({ params }) {
             </button>
           </div>
         </Form>
+        <div>
+          <h2 className="font-bold text-2xl mt-32 text-red-500">Zona Bahaya</h2>
+          <p className="text-gray-500 font-medium mt-1 text-sm mb-4">
+            Hati-hati! Tindakan ini tidak dapat dibatalkan.
+          </p>
+          <div className="mt-4 flex justify-start">
+            <button
+              type="button"
+              disabled={isLoading}
+              onClick={onOpen}
+              className={`btn bg-red-500 text-white ${
+                isLoading ? "opacity-50 cursor-not-allowed" : ""
+              }`}>
+              {isLoading ? "Loading..." : "Hapus Toko"}
+            </button>
+          </div>
+
+          <Modal isOpen={isOpen} onOpenChange={onOpenChange} placement="center">
+            <ModalContent>
+              {(onClose) => (
+                <>
+                  <ModalHeader className="flex flex-col gap-1">
+                    Konfirmasi Penghapusan
+                  </ModalHeader>
+                  <ModalBody>
+                    Apakah Anda yakin ingin menghapus toko ini? Tindakan ini
+                    tidak dapat dibatalkan.
+                  </ModalBody>
+                  <ModalFooter>
+                    <Button
+                      variant="bordered"
+                      onPress={onClose}
+                      disabled={isLoading}>
+                      Batal
+                    </Button>
+                    <Button
+                      color="danger"
+                      onPress={() => handleDelete(onClose)}
+                      disabled={isLoading}
+                      isLoading={isLoading}>
+                      {isLoading ? "Menghapus..." : "Hapus"}
+                    </Button>
+                  </ModalFooter>
+                </>
+              )}
+            </ModalContent>
+          </Modal>
+        </div>
       </main>
     </>
   );
