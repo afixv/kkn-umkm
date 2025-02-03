@@ -199,7 +199,6 @@ export default function Edit({ params }) {
       if (formData.gallery) {
         payload.data.gallery = await Promise.all(
           formData.gallery
-            .filter((image) => image !== null)
             .map(async (image, index) => {
               return image
                 ? image !== initialImages.gallery[index]
@@ -207,6 +206,7 @@ export default function Edit({ params }) {
                   : initialImagesId.gallery[index]
                 : initialImagesId.gallery[index];
             })
+            .filter((image) => image !== null)
         );
       }
 
@@ -219,8 +219,6 @@ export default function Edit({ params }) {
           payload.data[key] = formData[key];
         }
       });
-
-      console.log("Payload to send:", payload);
 
       await axios.put(
         `${process.env.NEXT_PUBLIC_API_URL}/umkms/${slug}`,
